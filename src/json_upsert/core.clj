@@ -70,10 +70,9 @@
 
 
 (defn upsert-row [options values]
-  (let [query (:query options)
-        datasource (:datasource options)]
-  (jdbc/with-db-connection [conn {:datasource datasource}]
-    (jdbc/execute! conn (apply conj [query] values) :multi? false :transaction? false))))
+  (let [{query :query datasource :datasource} options]
+    (jdbc/with-db-connection [conn {:datasource datasource}]
+      (jdbc/execute! conn (apply conj [query] values) :multi? false :transaction? false))))
 
 
 
@@ -86,10 +85,11 @@
                     (dissoc :query))
         datasource (make-datasource (merge datasource-options db-options))
         scores (read-scores filename)]
-    (println "Running" (count scores) "queries")
-    (doall (pmap (partial upsert-row {:datasource datasource :query query}) scores))
-    (shutdown-agents)
-    (close-datasource datasource)))
+    (do
+      (println "Running" (count scores) "queries")
+      (doall (pmap (partial upsert-row {:datasource datasource :query query}) scores))
+      (shutdown-agents)
+      (close-datasource datasource))))
 
 
 
